@@ -17,6 +17,8 @@ function generateElements(actors) {
       drawName(actor);
       drawStatInfo(actor);
       drawSkills(actor);
+      drawGearContainer(actor);
+      drawInventory(actor);
       break;
     case "fight":
       drawBackground(actor);
@@ -32,6 +34,9 @@ function generateElements(actors) {
       });
       drawLobbyButtons(game.fightButtons, 'fight');
       break;
+  }
+  if (game.infoBox.obj) {
+    drawInfoBox();
   }
 }
 
@@ -106,8 +111,14 @@ function drawStatInfo(actor) {
   i = 2;
   // add crit chance to it
   actor.stats.critchance = Math.floor((actor.stats.dex * 0.2) * 100) / 100 + "%";
-  $.each(actor.stats, function (index, line) {
-    context.fillText(getLang(index) + ": " + line, elements.positions(actor.position).stats_x + 5, elements.positions(actor.position).statInfo_y + 20 * i);
+  critChance = 0;
+  stats = getGearStats(actor);
+  $.each(actor.stats, function (aIndex, line) {
+    if (aIndex == "dex") {
+      critChance = Math.floor(((line + stats.dex) * 0.2) * 100) / 100 + "%";
+    }
+    newStat = aIndex == "critchance" ? critChance : (line + stats[aIndex]);
+    context.fillText(getLang(aIndex) + ": " + newStat, elements.positions(actor.position).stats_x + 5, elements.positions(actor.position).statInfo_y + 20 * i);
     i++;
   });
 }
@@ -124,7 +135,7 @@ function drawSkills(actor) {
     context.fillStyle = "#00000045";
     context.fillRect(rect_x, rect_y, rect_w, rect_h);
     context.fillStyle = "#000";
-    context.fillText(skill.name+" mp: "+skill.mp, elements.positions(actor.position).stats_x + 10, (elements.positions(actor.position).statInfo_y + textHeight + 2) + topMargin);
+    context.fillText(skill.name, elements.positions(actor.position).stats_x + 10, (elements.positions(actor.position).statInfo_y + textHeight + 2) + topMargin);
     context.fillStyle = elements.exp.fg;
     skillExp = skill.exp ? (rect_w / skill.exp.max) * skill.exp.now : 0;
     context.fillRect(rect_x, rect_y + (rect_h - 5), skillExp, 5);
@@ -136,7 +147,174 @@ function drawSkills(actor) {
       h: rect_h
     };
   });
+}
+function drawGearContainer(actor) {
+  // draw gear
+  context.font = elements.bigFont;
+  context.fillStyle = "#000";
+  context.fillText("Gear", elements.gear.x + 5, elements.positions(actor.position).name_y);
+  // draw itmes
+  if (actor.gear) {
+    col = 0;
+    row = 0;
+    spacer = 5;
+    rect_s = 50;
+    maxElement = Math.floor((canvas.width * 0.7) / (rect_s + spacer)) - 1;
+    $.each(elements.gear.parts, function (index, part) {
+      rect_x = elements.gear.x + spacer + ((rect_s + spacer) * col);
+      rect_y = elements.positions(actor.position).name_y + 10 + ((rect_s + spacer) * row);
+      if (col == maxElement) {
+        col = 0;
+        row++;
+      } else {
+        col++;
+      }
+      context.fillStyle = "#000";
+      color = "#FFF";
+      if (game.draggedObj.index >= 0) {
+        if (game.draggedObj.item.part == part) {
+          color = "#ff0000";
+          context.fillStyle = "#FFFFFF";
+        }
+      }
+      if (actor.gear[part] && actor.gear[part].part == part) {
+        color = actor.gear[part].color;
+        context.fillRect(rect_x, rect_y, rect_s, rect_s);
+      }
+      drawLineSquare(rect_x, rect_y, rect_s, color, 3);
+      if (!actor.gear[part]) {
+        actor.gear[part] = {};
+      }
+      actor.gear[part].pos = {
+        x: rect_x,
+        y: rect_y,
+        h: rect_s,
+        w: rect_s
+      }
+    });
+    elements.inventory.end_y = rect_y + rect_s * 3;
+  }
+}
+function drawInventory(actor) {
+  // draw inventory background
+  context.fillStyle = elements.inventory.bg;
+  // draw inventory name
+  context.font = elements.bigFont;
+  context.fillStyle = "#000";
+  context.fillText("Inventory", elements.inventory.x + 5, elements.inventory.end_y);
 
+  // draw itmes
+  if (actor.items) {
+    col = 0;
+    row = 0;
+    spacer = 5;
+    rect_s = 30;
+    maxElement = Math.floor((canvas.width * 0.7) / (rect_s + spacer)) - 1;
+    draggedObj = [];
+    $.each(actor.items, function (index, item) {
+      if (item != null && item.isDragged == true) {
+        item.draggable = true;
+        draggedObj = item;
+      }
+    });
+    $.each(actor.items, function (index, item) {
+      if (item && item.isDragged != true) {
+        rect_x = elements.inventory.x + spacer + ((rect_s + spacer) * col);
+        rect_y = elements.inventory.end_y + 40 + ((rect_s + spacer) * row);
+        if (col == maxElement) {
+          col = 0;
+          row++;
+        } else {
+          col++;
+        }
+        context.fillStyle = "#000";
+        context.fillRect(rect_x, rect_y, rect_s, rect_s);
+        drawLineSquare(rect_x, rect_y, rect_s, item.color);
+        item.pos = {
+          x: rect_x,
+          y: rect_y,
+          h: rect_s,
+          w: rect_s
+        }
+        item.draggable = true;
+      }
+    });
+    if (draggedObj.pos) {
+      rect_x = draggedObj.pos.x;
+      rect_y = draggedObj.pos.y;
+      context.fillStyle = "#000";
+      context.fillRect(rect_x, rect_y, rect_s, rect_s);
+      drawLineSquare(rect_x, rect_y, rect_s, draggedObj.color);
+      draggedObj.pos = {
+        x: rect_x,
+        y: rect_y,
+        h: rect_s,
+        w: rect_s
+      }
+      draggedObj.draggable = true;
+    }
+    draggedObj = [];
+  }
+}
+function drawInfoBox() {
+  context.fillStyle = "#000";
+  filter = ["pos", "draggable", "isDragged", "color", "base", "type"];
+  if (game.infoBox.obj) {
+    boxX = (game.infoBox.mPos.x + 200) > canvas.width ? game.infoBox.mPos.x - 200 : game.infoBox.mPos.x;
+    context.fillRect(boxX, game.infoBox.mPos.y, 200, 200);
+    if (game.infoBox["type"] == "item") {
+      drawLineSquare(boxX, game.infoBox.mPos.y, 200, getRarityByName(game.infoBox.obj.rarity).color);
+    }
+    i = 0;
+    if (game.infoBox.obj.rarity) {
+      context.fillStyle = getRarityByName(game.infoBox.obj.rarity).color;
+    } else {
+      context.fillStyle = "#FFF";
+    }
+    for (var property in game.infoBox.obj) {
+      context.font = elements.normalFont;
+      textHeight = findLastNumberSize();
+      if ($.inArray(property, filter) === -1) {
+        if (isObject(game.infoBox.obj[property])) {
+          if (property == "exp") {
+            context.fillText(getLang("exp") + ": " + game.infoBox.obj[property].now + " / " + game.infoBox.obj[property].max, boxX + 5, game.infoBox.mPos.y + textHeight + 10 + (textHeight * i));
+          } else {
+            $.each(game.infoBox.obj[property], function (index, propertyChild) {
+              i++;
+              context.fillText(getLang(index) + ": " + propertyChild, boxX + 5, game.infoBox.mPos.y + textHeight + 10 + (textHeight * i));
+            });
+            i++;
+          }
+        } else {
+          if (property == "val") {
+            propertyName = property + "_" + game.infoBox.obj["type"];
+          } else {
+            propertyName = property;
+          }
+          if (property != "name" && property != "part") {
+            context.fillText(getLang(propertyName) + ": " + game.infoBox.obj[property], boxX + 5, game.infoBox.mPos.y + textHeight + 10 + (textHeight * i));
+          } else if (property == "part") {
+            context.fillText(getLang(propertyName) + ": " + getLang(game.infoBox.obj[property]), boxX + 5, game.infoBox.mPos.y + textHeight + 10 + (textHeight * i));
+          } else {
+            context.font = elements.bigFont;
+            context.fillText(game.infoBox.obj[property], boxX + 5, game.infoBox.mPos.y + 25 + (textHeight * i));
+          }
+        }
+        i++;
+      }
+    }
+  }
+}
+function drawLineSquare(x, y, s, bg, lineWidth = 1) {
+  context.lineWidth = lineWidth;
+  context.beginPath();
+  context.strokeStyle = bg;
+  context.moveTo(x, y);
+  context.lineTo(x + s, y);
+  context.lineTo(x + s, y + s);
+  context.lineTo(x, y + s);
+  context.lineTo(x, y);
+  context.stroke();
 }
 function drawLog(fightlog) {
   context.font = elements.smallFont;

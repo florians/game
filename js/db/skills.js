@@ -4,21 +4,21 @@ skillsDB = {
     name: "Int Skill",
     base: "int",
     type: "dmg",
-	  mp: 10,
+    mp: 10,
     val: 33,
   },
   [2]: {
     name: "Str Skill",
     type: "str",
     type: "dmg",
-	mp: 7,
+    mp: 7,
     val: 33,
   },
   [3]: {
     name: "Dex Skill",
     base: "dex",
     type: "dmg",
-	mp: 7,
+    mp: 7,
     val: 33,
   },
   [4]: {
@@ -33,7 +33,7 @@ skillsDB = {
     name: "HEAL",
     base: "int",
     type: "heal",
-	mp: 25,
+    mp: 25,
     val: 50,
     turns: 2,
   }

@@ -32,7 +32,7 @@ function newPlayer(actor = null) {
     sprite: createSprite(spritePath),
     level: actor.level || 1,
     location: actor.location || "lobby",
-    mySkills: actor.mySkills || [1,4,5],
+    mySkills: actor.mySkills || [1, 4, 5],
     bar: {
       exp: {
         now: actor.bar.exp.now || 0,
@@ -53,14 +53,23 @@ function newPlayer(actor = null) {
       int: actor.stats.int || 10
     }
   };
+  // skills
   newPlayerStats.mergeSkills = actor.skills || [];
   newPlayerStats.skills = getSkillsFromDB(newPlayerStats);
   newPlayerStats.mergeSkills = [];
 
   if (newPlayerStats.role == "player") {
     newPlayerStats.location = "lobby";
+    // gear
+    newPlayerStats.gear = actor.gear || {};
+    // items
+    newPlayerStats.mergeItems = actor.items || [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    newPlayerStats.items = getItemsFromDB(newPlayerStats, 1);
+    newPlayerStats.mergeItems = [];
+
+
+    game.actors["player"] = newPlayerStats;
     localStorage.player = JSON.stringify(newPlayerStats);
-    game.actors["player"] = newPlayerStats
     generateEqEnemy(newPlayerStats);
   } else {
     game.actors["target"] = newPlayerStats

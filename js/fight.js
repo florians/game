@@ -59,6 +59,9 @@ function handleDeath(actor, damage) {
       clearFightlog();
     }
   }
+  if (getRandomItem() == true) {
+    getPlayer().location = "lobby";
+  }
   getPlayer().status = "fight";
   localStorage.player = JSON.stringify(getPlayer());
   game.end = true;

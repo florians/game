@@ -35,10 +35,14 @@ function actorDmg(actor, skill, type = "dmg") {
         break;
     }
   }
-  strDmg = (skillDmg + actor.stats.str) * weight.str;
-  dexDmg = (skillDmg + actor.stats.dex) * weight.dex;
-  intDmg = (skillDmg + actor.stats.int) * weight.int;
-  return Math.floor((strDmg + dexDmg + intDmg) * dmgMultiplier(actor.stats));
+  stats = getGearStats(actor);
+  stats.str = stats.str + actor.stats.str;
+  stats.dex = stats.dex + actor.stats.dex;
+  stats.int = stats.int + actor.stats.int;
+  strDmg = (skillDmg + stats.str) * weight.str;
+  dexDmg = (skillDmg + stats.dex) * weight.dex;
+  intDmg = (skillDmg + stats.int) * weight.int;
+  return Math.floor((strDmg + dexDmg + intDmg) * dmgMultiplier(stats));
 }
 function actorHeal(actor, skill) {
   skillHeal = skill.val;

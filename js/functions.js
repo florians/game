@@ -42,13 +42,13 @@ function fightLog(line, actor, type) {
 function getSkillsFromDB(actor) {
   skillArray = {};
   $.each(actor.mySkills, function (aIndex, aVal) {
-    // clone skill for player specific change to it
     if (actor.mergeSkills != "") {
       $.each(actor.mergeSkills, function (bIndex, bVal) {
         if (aIndex == bIndex) {
           skillArray[aIndex] = true;
         }
       });
+      // clone skill for player or merge from local skills
       if (skillArray[aIndex] == true) {
         skillArray[aIndex] = $.extend(true, {}, actor.mergeSkills[aIndex]);
       } else {
@@ -60,6 +60,78 @@ function getSkillsFromDB(actor) {
   });
   return skillArray;
 }
+function getItemsFromDB(actor, rarity) {
+  itemArray = [];
+  $.each(actor.mergeItems, function (aIndex, aVal) {
+    // if local take that else new from itemsDB
+    if (!isNaN(aVal)) {
+      itemArray[aIndex] = addItemRarity(actor, $.extend(true, {}, itemsDB.base[aVal]), rarity);
+    } else {
+      itemArray[aIndex] = aVal;
+    }
+  });
+  return itemArray;
+}
+
+function addItemRarity(actor, item, rarity) {
+  newItem = {};
+  if (item) {
+    if (rarity) {
+      rarityMultiplier = getRarity(rarity).multiplier;
+      rarityName = getRarity(rarity).name;
+      rarityColor = getRarity(rarity).color;
+    } else {
+      nr = Math.floor(Math.random() * 100) + 1;
+      $.each(itemsDB.rarity, function (index, rarity) {
+        min = rarity.range.split("-")[0];
+        max = rarity.range.split("-")[1];
+        if (nr >= min && nr <= max) {
+          rarityMultiplier = rarity.multiplier;
+          rarityName = rarity.name;
+          rarityColor = rarity.color;
+        }
+      });
+    }
+    newItem = item;
+    newItem.stats = {
+      str: statRandomizer(actor.level) * rarityMultiplier,
+      dex: statRandomizer(actor.level) * rarityMultiplier,
+      int: statRandomizer(actor.level) * rarityMultiplier
+    }
+    newItem.rarity = rarityName;
+    newItem.color = rarityColor;
+  }
+
+  return newItem;
+}
+function getRandomItem() {
+  chance = Math.floor(Math.random() * 10) + 1;
+  if (chance > 8) {
+    gearType = Math.floor(Math.random() * elements.gear.parts.length) + 1;
+    rarity = Math.floor(Math.random() * 5) + 1;
+    getPlayer().items[getPlayer().items.length] = addItemRarity(getPlayer(), $.extend(true, {}, itemsDB.base[gearType]), rarity);
+    return true;
+  }
+  return false;
+}
+function getRarity(nr) {
+  var newRarity;
+  $.each(itemsDB.rarity, function (index, rarity) {
+    if (nr == rarity.nr) {
+      newRarity = rarity;
+    }
+  });
+  return newRarity;
+}
+function getRarityByName(name) {
+  var newRarity;
+  $.each(itemsDB.rarity, function (index, rarity) {
+    if (name == rarity.name) {
+      newRarity = rarity;
+    }
+  });
+  return newRarity;
+}
 // returns stats + random amount
 function statRandomizer(stat, max = 3) {
   seed = (Math.floor(Math.random() * max))
@@ -70,6 +142,34 @@ function statRandomizer(stat, max = 3) {
   }
   return stat
 }
+
+function getGearStats(actor, type) {
+  var stats = {
+    str: 0,
+    dex: 0,
+    int: 0
+  }
+  $.each(actor.stats, function (aIndex, line) {
+    statFromGear = 0;
+    if (actor.gear) {
+      $.each(actor.gear, function (bIndex, gear) {
+        if (gear.name) {
+          $.each(gear.stats, function (cIndex, stat) {
+            if (aIndex == cIndex) {
+              stats[aIndex] += stat;
+            }
+          });
+        }
+      });
+    }
+  });
+  if (type) {
+    return stats[type];
+  } else {
+    return stats;
+  }
+}
+
 // clear fightlog
 function clearFightlog() {
   game.fightlog = [];
@@ -77,4 +177,7 @@ function clearFightlog() {
 // gets last occurence of 
 function findLastNumberSize() {
   return parseInt(context.font.match(/(\d+)(?!.*\d)/))
+}
+function isObject(value) {
+  return value && typeof value === 'object' && value.constructor === Object;
 }

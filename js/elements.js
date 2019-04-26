@@ -11,22 +11,22 @@ function setBaseElements() {
     hp: {
       w: canvas.width * 0.3,
       h: 30,
-      bg: '#ff000045',
-      fg: '#FF0000',
+      bg: "#ff000045",
+      fg: "#FF0000",
       fontcolor: "#FFF"
     },
     mp: {
       w: canvas.width * 0.3,
       h: 30,
-      bg: '#000fff45',
-      fg: '#000fff',
+      bg: "#000fff45",
+      fg: "#000fff",
       fontcolor: "#FFF"
     },
     exp: {
       w: canvas.width,
       h: 30,
-      bg: '#ffd60045',
-      fg: '#ffd600',
+      bg: "#ffd60045",
+      fg: "#ffd600",
       fontcolor: "#FFF"
     },
     spriteSize: {
@@ -37,12 +37,22 @@ function setBaseElements() {
       fight_w: canvas.width * 0.3,
       lobby_w: canvas.width,
       get h() { return canvas.height - (elements.spriteSize.h + elements.hp.h * 3) },
-      bg: '#00b4ff'
+      bg: "#00b4ff"
+    },
+    gear: {
+      x: canvas.width * 0.3,
+      get y() { return elements.spriteSize.h + elements.hp.h * 2 },
+      parts: ["chest", "shoulders", "boots", "gloves", "head", "amulet", "belt", "ring", "weapon"]
+    },
+    inventory: {
+      x: canvas.width * 0.3,
+      w: canvas.width * 0.7,
+      bg: "#00b44f40"
     },
     log: {
       player: "#ff7800",
       target: "#FFFFFF60",
-      type:{
+      type: {
         dmg: "#f44336",
         dot: "#7c48da",
         heal: "#4caf50",
